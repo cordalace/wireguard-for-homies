@@ -1,4 +1,4 @@
-# wireguard-for-homies
+# Wireguard for homies
 
 Telegram bot managed wireguard server for you and your friends
 
