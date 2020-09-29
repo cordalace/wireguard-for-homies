@@ -10,7 +10,7 @@ Telegram bot managed wireguard server for you and your friends
 ## Goals
 
 1. User-friendly service
-2. Quality code
+2. Code quality
 
 ## Non-Goals
 
