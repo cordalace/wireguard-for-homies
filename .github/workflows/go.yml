@@ -52,4 +52,4 @@ jobs:
       with:
         # Required: the version of golangci-lint is required and must be specified without patch version: we always use the latest patch version.
         version: v1.31
-        args: --enable-all -D wsl -D nlreturn -D testpackage
+        args: --enable-all -D wsl -D nlreturn -D testpackage -D funlen
