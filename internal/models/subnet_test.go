@@ -16,7 +16,7 @@ func ipNetMustParse(s string) *net.IPNet {
 	return ret
 }
 
-func TestSubnet_ToJSON(t *testing.T) {
+func TestSubnetToJSON(t *testing.T) {
 	type fields struct {
 		ID   uuid.UUID
 		CIDR *net.IPNet
@@ -30,10 +30,10 @@ func TestSubnet_ToJSON(t *testing.T) {
 		{
 			name: "ipv4",
 			fields: fields{
-				ID:   uuid.MustParse("1a4c0f86-07fa-4fdc-9f97-349925edb975"),
-				CIDR: ipNetMustParse("192.168.0.1/24"),
+				ID:   uuid.MustParse("2eba5e83-d0c3-46f0-bbeb-884e62e19b62"),
+				CIDR: ipNetMustParse("192.168.0.0/24"),
 			},
-			want:    `{"id":"1a4c0f86-07fa-4fdc-9f97-349925edb975","cidr":"192.168.0.0/24"}`,
+			want:    `{"id":"2eba5e83-d0c3-46f0-bbeb-884e62e19b62","cidr":"192.168.0.0/24"}`,
 			wantErr: false,
 		},
 		{
@@ -78,29 +78,29 @@ func TestSubnetFromJSON(t *testing.T) {
 		{
 			name: "ipv4",
 			args: args{
-				data: []byte(`{"id":"1a4c0f86-07fa-4fdc-9f97-349925edb975","cidr":"192.168.0.0/24"}`),
+				data: []byte(`{"id":"506ca6b1-a2da-4396-b9ba-304c032fc401","cidr":"192.168.1.0/24"}`),
 			},
 			want: &Subnet{
-				ID:   uuid.MustParse("1a4c0f86-07fa-4fdc-9f97-349925edb975"),
-				CIDR: ipNetMustParse("192.168.0.1/24"),
+				ID:   uuid.MustParse("506ca6b1-a2da-4396-b9ba-304c032fc401"),
+				CIDR: ipNetMustParse("192.168.1.0/24"),
 			},
 			wantErr: false,
 		},
 		{
 			name: "ipv6",
 			args: args{
-				data: []byte(`{"id":"1a4c0f86-07fa-4fdc-9f97-349925edb975","cidr":"2002:0:0:1234::/64"}`),
+				data: []byte(`{"id":"2a782886-2661-45ce-bb6f-106b429ac76e","cidr":"2002:0:0:1235::/64"}`),
 			},
 			want: &Subnet{
-				ID:   uuid.MustParse("1a4c0f86-07fa-4fdc-9f97-349925edb975"),
-				CIDR: ipNetMustParse("2002:0:0:1234::/64"),
+				ID:   uuid.MustParse("2a782886-2661-45ce-bb6f-106b429ac76e"),
+				CIDR: ipNetMustParse("2002:0:0:1235::/64"),
 			},
 			wantErr: false,
 		},
 		{
 			name: "bad id",
 			args: args{
-				data: []byte(`{"id":"bad uuid","cidr":"2002:0:0:1234::/64"}`),
+				data: []byte(`{"id":"bad uuid","cidr":"2002:0:0:1235::/64"}`),
 			},
 			want:    nil,
 			wantErr: true,
@@ -108,7 +108,7 @@ func TestSubnetFromJSON(t *testing.T) {
 		{
 			name: "bad id json type",
 			args: args{
-				data: []byte(`{"id":42,"cidr":"2002:0:0:1234::/64"}`),
+				data: []byte(`{"id":42,"cidr":"2002:0:0:1235::/64"}`),
 			},
 			want:    nil,
 			wantErr: true,
@@ -116,7 +116,7 @@ func TestSubnetFromJSON(t *testing.T) {
 		{
 			name: "bad cidr",
 			args: args{
-				data: []byte(`{"id":"1a4c0f86-07fa-4fdc-9f97-349925edb975","cidr":"bad cidr"}`),
+				data: []byte(`{"id":"bfc2ab7e-a77f-437d-81f5-ae463712fc88","cidr":"bad cidr"}`),
 			},
 			want:    nil,
 			wantErr: true,
@@ -124,7 +124,7 @@ func TestSubnetFromJSON(t *testing.T) {
 		{
 			name: "bad cidr json type",
 			args: args{
-				data: []byte(`{"id":"1a4c0f86-07fa-4fdc-9f97-349925edb975","cidr":42}`),
+				data: []byte(`{"id":"41e0a99b-4b9c-4d84-81d4-4aba1b0e2a61","cidr":42}`),
 			},
 			want:    nil,
 			wantErr: true,
