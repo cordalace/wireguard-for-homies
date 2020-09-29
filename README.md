@@ -15,3 +15,4 @@ Telegram bot managed wireguard server for you and your friends
 ## Non-Goals
 
 1. Distributed server, High Availability, Fault Tolerance
+2. High performance
