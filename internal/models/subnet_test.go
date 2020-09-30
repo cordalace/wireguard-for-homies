@@ -144,3 +144,119 @@ func TestSubnetFromJSON(t *testing.T) {
 		})
 	}
 }
+
+func TestSubnetListToJSON(t *testing.T) {
+	tests := []struct {
+		name    string
+		l       SubnetList
+		want    string
+		wantErr bool
+	}{
+		{
+			name: "one subnet",
+			l: SubnetList{
+				&Subnet{
+					ID:   uuid.MustParse("2eba5e83-d0c3-46f0-bbeb-884e62e19b62"),
+					CIDR: ipNetMustParse("192.168.0.0/24"),
+				},
+			},
+			want:    `[{"id":"2eba5e83-d0c3-46f0-bbeb-884e62e19b62","cidr":"192.168.0.0/24"}]`,
+			wantErr: false,
+		},
+		{
+			name:    "empty",
+			l:       SubnetList{},
+			want:    `[]`,
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		tt := tt // pin!
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := tt.l.ToJSON()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("SubnetList.ToJSON() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if string(got) != tt.want {
+				t.Errorf("SubnetList.ToJSON() = %v, want %v", string(got), tt.want)
+			}
+		})
+	}
+}
+
+func TestSubnetListFromJSON(t *testing.T) {
+	type args struct {
+		data []byte
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    []*Subnet
+		wantErr bool
+	}{
+		{
+			name: "one subnet",
+			args: args{
+				data: []byte(`[{"id":"2eba5e83-d0c3-46f0-bbeb-884e62e19b62","cidr":"192.168.0.0/24"}]`),
+			},
+			want: []*Subnet{
+				&Subnet{
+					ID:   uuid.MustParse("2eba5e83-d0c3-46f0-bbeb-884e62e19b62"),
+					CIDR: ipNetMustParse("192.168.0.0/24"),
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "empty",
+			args: args{
+				data: []byte(`[{"id":"2eba5e83-d0c3-46f0-bbeb-884e62e19b62","cidr":"192.168.0.0/24"}]`),
+			},
+			want: []*Subnet{
+				&Subnet{
+					ID:   uuid.MustParse("2eba5e83-d0c3-46f0-bbeb-884e62e19b62"),
+					CIDR: ipNetMustParse("192.168.0.0/24"),
+				},
+			},
+			wantErr: false,
+		},
+		{
+			name: "bad json type",
+			args: args{
+				data: []byte(`42`),
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name: "bad id",
+			args: args{
+				data: []byte(`[{"id":"non uuid","cidr":"192.168.0.0/24"}]`),
+			},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name: "bad cidr",
+			args: args{
+				data: []byte(`[{"id":"2eba5e83-d0c3-46f0-bbeb-884e62e19b62","cidr":"bad cidr"}]`),
+			},
+			want:    nil,
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		tt := tt // pin!
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := SubnetListFromJSON(tt.args.data)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("SubnetListFromJSON() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("SubnetListFromJSON() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

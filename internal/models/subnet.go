@@ -44,6 +44,9 @@ func SubnetFromJSON(data []byte) (*Subnet, error) {
 
 func (l SubnetList) ToJSON() ([]byte, error) {
 	j := make([]*subnetJSON, len(l))
+	for i, item := range l {
+		j[i] = &subnetJSON{ID: item.ID.String(), CIDR: item.CIDR.String()}
+	}
 	return json.Marshal(j)
 }
 
