@@ -201,7 +201,7 @@ func TestSubnetListFromJSON(t *testing.T) {
 				data: []byte(`[{"id":"2eba5e83-d0c3-46f0-bbeb-884e62e19b62","cidr":"192.168.0.0/24"}]`),
 			},
 			want: []*Subnet{
-				&Subnet{
+				{
 					ID:   uuid.MustParse("2eba5e83-d0c3-46f0-bbeb-884e62e19b62"),
 					CIDR: ipNetMustParse("192.168.0.0/24"),
 				},
@@ -214,7 +214,7 @@ func TestSubnetListFromJSON(t *testing.T) {
 				data: []byte(`[{"id":"2eba5e83-d0c3-46f0-bbeb-884e62e19b62","cidr":"192.168.0.0/24"}]`),
 			},
 			want: []*Subnet{
-				&Subnet{
+				{
 					ID:   uuid.MustParse("2eba5e83-d0c3-46f0-bbeb-884e62e19b62"),
 					CIDR: ipNetMustParse("192.168.0.0/24"),
 				},
