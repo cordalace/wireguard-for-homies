@@ -1,6 +1,10 @@
 package badgerdb
 
-import "github.com/dgraph-io/badger"
+import (
+	"fmt"
+
+	"github.com/dgraph-io/badger"
+)
 
 func getOrCreate(txn *badger.Txn, key string, value []byte) ([]byte, error) {
 	var result []byte
@@ -27,4 +31,8 @@ func getOrCreate(txn *badger.Txn, key string, value []byte) ([]byte, error) {
 	default:
 		return nil, err
 	}
+}
+
+func fmtDBKey(prefix, id string) []byte {
+	return []byte(fmt.Sprintf("%v:%v", prefix, id))
 }

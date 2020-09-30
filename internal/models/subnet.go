@@ -12,7 +12,7 @@ type Subnet struct {
 	CIDR *net.IPNet
 }
 
-type SubnetList []*Subnet
+type SubnetSlice []*Subnet
 
 type subnetJSON struct {
 	ID   string `json:"id"`
@@ -42,7 +42,7 @@ func SubnetFromJSON(data []byte) (*Subnet, error) {
 	return ret, nil
 }
 
-func (l SubnetList) ToJSON() ([]byte, error) {
+func (l SubnetSlice) ToJSON() ([]byte, error) {
 	j := make([]*subnetJSON, len(l))
 	for i, item := range l {
 		j[i] = &subnetJSON{ID: item.ID.String(), CIDR: item.CIDR.String()}
@@ -50,7 +50,7 @@ func (l SubnetList) ToJSON() ([]byte, error) {
 	return json.Marshal(j)
 }
 
-func SubnetListFromJSON(data []byte) ([]*Subnet, error) {
+func SubnetSliceFromJSON(data []byte) ([]*Subnet, error) {
 	j := []*subnetJSON{}
 	err := json.Unmarshal(data, &j)
 	if err != nil {

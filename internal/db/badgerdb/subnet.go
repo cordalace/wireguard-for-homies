@@ -1,52 +1,13 @@
 package badgerdb
 
 import (
-	"encoding/json"
-	"fmt"
-	"net"
-
 	"github.com/cordalace/wireguard-for-homies/internal/db"
 	"github.com/cordalace/wireguard-for-homies/internal/models"
 	"github.com/dgraph-io/badger"
 	"github.com/google/uuid"
 )
 
-type cidrs map[uuid.UUID]*net.IPNet
-
-type cidrsJSON map[string]string
-
-func (c cidrs) toJSON() ([]byte, error) {
-	j := make(cidrsJSON, len(c))
-	for subnetID, subnetCIDR := range c {
-		j[subnetID.String()] = subnetCIDR.String()
-	}
-	return json.Marshal(j)
-}
-
-func cidrsFromJSON(data []byte) (cidrs, error) {
-	j := make(cidrsJSON)
-	err := json.Unmarshal(data, &j)
-	if err != nil {
-		return nil, err
-	}
-	ret := make(cidrs, len(j))
-	var (
-		parsedID   uuid.UUID
-		parsedCIDR *net.IPNet
-	)
-	for key, value := range j {
-		parsedID, err = uuid.Parse(key)
-		if err != nil {
-			return nil, err
-		}
-		_, parsedCIDR, err = net.ParseCIDR(value)
-		if err != nil {
-			return nil, err
-		}
-		ret[parsedID] = parsedCIDR
-	}
-	return ret, nil
-}
+const subnetPrefix = "subnet"
 
 func (t *badgerTX) CreateSubnet(subnet *models.Subnet) (*models.Subnet, error) {
 	var (
@@ -65,19 +26,19 @@ func (t *badgerTX) CreateSubnet(subnet *models.Subnet) (*models.Subnet, error) {
 	if err != nil {
 		return nil, err
 	}
-	err = t.txn.Set([]byte(fmt.Sprintf("subnet:%v", subnetID.String())), subnetJSON)
+	err = t.txn.Set(fmtDBKey(subnetPrefix, subnetID.String()), subnetJSON)
 	if err != nil {
 		return nil, err
 	}
 
-	c, err := t.getCIDRs()
+	c, err := t.getCIDRMap()
 	if err != nil {
 		return nil, err
 	}
 
 	c[subnetID] = subnet.CIDR
 
-	err = t.saveCIDRs(c)
+	err = t.saveCIDRMap(c)
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +47,7 @@ func (t *badgerTX) CreateSubnet(subnet *models.Subnet) (*models.Subnet, error) {
 }
 
 func (t *badgerTX) GetSubnet(id uuid.UUID) (*models.Subnet, error) {
-	item, err := t.txn.Get([]byte(fmt.Sprintf("subnet:%v", id.String())))
+	item, err := t.txn.Get(fmtDBKey(subnetPrefix, id.String()))
 	switch err {
 	case badger.ErrKeyNotFound:
 		return nil, db.ErrSubnetNotFound
@@ -106,52 +67,16 @@ func (t *badgerTX) GetSubnet(id uuid.UUID) (*models.Subnet, error) {
 }
 
 func (t *badgerTX) DeleteSubnet(id uuid.UUID) error {
-	err := t.txn.Delete([]byte(id.String()))
+	err := t.txn.Delete(fmtDBKey(subnetPrefix, id.String()))
 	if err != nil {
 		return err
 	}
 
-	c, err := t.getCIDRs()
+	c, err := t.getCIDRMap()
 	if err != nil {
 		return err
 	}
 
 	delete(c, id)
-	return t.saveCIDRs(c)
-}
-
-func (t *badgerTX) getCIDRs() (cidrs, error) {
-	value, err := getOrCreate(t.txn, "cidrs", []byte("{}"))
-	if err != nil {
-		return nil, err
-	}
-
-	return cidrsFromJSON(value)
-}
-
-func (t *badgerTX) saveCIDRs(c cidrs) error {
-	data, err := c.toJSON()
-	if err != nil {
-		return err
-	}
-	return t.txn.Set([]byte("cidrs"), data)
-}
-
-func (t *badgerTX) GetSubnetCIDRs() ([]*net.IPNet, error) {
-	value, err := getOrCreate(t.txn, "cidrs", []byte("{}"))
-	if err != nil {
-		return nil, err
-	}
-
-	cidrs, err := cidrsFromJSON(value)
-	if err != nil {
-		return nil, err
-	}
-
-	ret := make([]*net.IPNet, 0, len(cidrs))
-	for _, subnetCIDR := range cidrs {
-		ret = append(ret, subnetCIDR)
-	}
-
-	return ret, nil
+	return t.saveCIDRMap(c)
 }

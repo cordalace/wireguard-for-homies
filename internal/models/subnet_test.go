@@ -145,16 +145,16 @@ func TestSubnetFromJSON(t *testing.T) {
 	}
 }
 
-func TestSubnetListToJSON(t *testing.T) {
+func TestSubnetSliceToJSON(t *testing.T) {
 	tests := []struct {
 		name    string
-		l       SubnetList
+		l       SubnetSlice
 		want    string
 		wantErr bool
 	}{
 		{
 			name: "one subnet",
-			l: SubnetList{
+			l: SubnetSlice{
 				&Subnet{
 					ID:   uuid.MustParse("2eba5e83-d0c3-46f0-bbeb-884e62e19b62"),
 					CIDR: ipNetMustParse("192.168.0.0/24"),
@@ -165,7 +165,7 @@ func TestSubnetListToJSON(t *testing.T) {
 		},
 		{
 			name:    "empty",
-			l:       SubnetList{},
+			l:       SubnetSlice{},
 			want:    `[]`,
 			wantErr: false,
 		},
@@ -175,17 +175,17 @@ func TestSubnetListToJSON(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			got, err := tt.l.ToJSON()
 			if (err != nil) != tt.wantErr {
-				t.Errorf("SubnetList.ToJSON() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("SubnetSlice.ToJSON() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if string(got) != tt.want {
-				t.Errorf("SubnetList.ToJSON() = %v, want %v", string(got), tt.want)
+				t.Errorf("SubnetSlice.ToJSON() = %v, want %v", string(got), tt.want)
 			}
 		})
 	}
 }
 
-func TestSubnetListFromJSON(t *testing.T) {
+func TestSubnetSliceFromJSON(t *testing.T) {
 	type args struct {
 		data []byte
 	}
@@ -249,13 +249,13 @@ func TestSubnetListFromJSON(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt // pin!
 		t.Run(tt.name, func(t *testing.T) {
-			got, err := SubnetListFromJSON(tt.args.data)
+			got, err := SubnetSliceFromJSON(tt.args.data)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("SubnetListFromJSON() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("SubnetSliceFromJSON() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("SubnetListFromJSON() = %v, want %v", got, tt.want)
+				t.Errorf("SubnetSliceFromJSON() = %v, want %v", got, tt.want)
 			}
 		})
 	}
