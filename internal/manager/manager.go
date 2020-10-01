@@ -30,7 +30,7 @@ func (m *Manager) getLink(name string) netlink.Link {
 
 // Init wireguard manager, should be always called after instantiating Wireguard.
 func (m *Manager) Init() error {
-	tx, err := m.db.Begin()
+	tx, err := m.db.Begin(db.TxModeReadWrite)
 	if err != nil {
 		return err
 	}
@@ -46,7 +46,7 @@ func (m *Manager) Init() error {
 
 // Close wireguard.
 func (m *Manager) Close() error {
-	tx, err := m.db.Begin()
+	tx, err := m.db.Begin(db.TxModeReadWrite)
 	if err != nil {
 		return err
 	}

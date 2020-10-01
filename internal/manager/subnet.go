@@ -4,13 +4,14 @@ import (
 	"errors"
 
 	"github.com/apparentlymart/go-cidr/cidr"
+	"github.com/cordalace/wireguard-for-homies/internal/db"
 	"github.com/cordalace/wireguard-for-homies/internal/models"
 )
 
 var ErrSubnetOverlaps = errors.New("subnet overlaps with one of existing subnets")
 
 func (m *Manager) CreateSubnet(subnet *models.Subnet) (*models.Subnet, error) {
-	tx, err := m.db.Begin()
+	tx, err := m.db.Begin(db.TxModeReadWrite)
 	if err != nil {
 		return nil, err
 	}

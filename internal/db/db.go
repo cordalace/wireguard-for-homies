@@ -10,10 +10,17 @@ import (
 
 var ErrSubnetNotFound = errors.New("subnet not found")
 
+type TxMode int
+
+const (
+	TxModeReadOnly TxMode = iota
+	TxModeReadWrite
+)
+
 type DB interface {
 	Init() error
-	Begin() (Tx, error)
 	Close() error
+	Begin(mode TxMode) (Tx, error)
 }
 
 type Tx interface {
