@@ -3,7 +3,7 @@ package main
 import (
 	"github.com/cordalace/wireguard-for-homies/internal/db/badgerdb"
 	"github.com/cordalace/wireguard-for-homies/internal/manager"
-	"github.com/dgraph-io/badger"
+	badger "github.com/dgraph-io/badger/v2"
 	"github.com/vishvananda/netlink"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"

@@ -3,8 +3,12 @@ package badgerdb
 import (
 	"fmt"
 
-	"github.com/dgraph-io/badger"
+	badger "github.com/dgraph-io/badger/v2"
 )
+
+func fmtDBKey(prefix, id string) []byte {
+	return []byte(fmt.Sprintf("%v:%v", prefix, id))
+}
 
 func getOrCreate(txn *badger.Txn, key string, value []byte) ([]byte, error) {
 	var result []byte
@@ -31,8 +35,4 @@ func getOrCreate(txn *badger.Txn, key string, value []byte) ([]byte, error) {
 	default:
 		return nil, err
 	}
-}
-
-func fmtDBKey(prefix, id string) []byte {
-	return []byte(fmt.Sprintf("%v:%v", prefix, id))
 }

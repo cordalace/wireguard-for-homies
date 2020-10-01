@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 )
 
-var ErrSubnetNotFound = errors.New("pool not found")
+var ErrSubnetNotFound = errors.New("subnet not found")
 
 type DB interface {
 	Init() error

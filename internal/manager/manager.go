@@ -6,6 +6,8 @@ import (
 	"go.uber.org/zap"
 )
 
+const defaultDeviceName = "wg0"
+
 // Manager operates kernel wireguard settings.
 type Manager struct {
 	db            db.DB
@@ -33,11 +35,11 @@ func (m *Manager) Init() error {
 		return err
 	}
 	defer tx.Rollback()
-	deviceName, err := tx.GetOrCreateDeviceName("wg0")
+
+	deviceName, err := tx.GetOrCreateDeviceName(defaultDeviceName)
 	if err != nil {
 		return err
 	}
-	m.logger.Info("device name", zap.String("deviceName", deviceName))
 
 	return netlink.LinkAdd(m.getLink(deviceName))
 }
@@ -49,11 +51,11 @@ func (m *Manager) Close() error {
 		return err
 	}
 	defer tx.Rollback()
-	deviceName, err := tx.GetOrCreateDeviceName("wg0")
+
+	deviceName, err := tx.GetOrCreateDeviceName(defaultDeviceName)
 	if err != nil {
 		return err
 	}
-	m.logger.Info("device name", zap.String("deviceName", deviceName))
 
 	return m.netlinkHandle.LinkDel(m.getLink(deviceName))
 }

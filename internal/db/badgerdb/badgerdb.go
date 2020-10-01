@@ -2,7 +2,7 @@ package badgerdb
 
 import (
 	"github.com/cordalace/wireguard-for-homies/internal/db"
-	"github.com/dgraph-io/badger"
+	badger "github.com/dgraph-io/badger/v2"
 )
 
 type badgerDB struct {

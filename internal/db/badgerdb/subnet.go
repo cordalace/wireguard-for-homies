@@ -3,7 +3,7 @@ package badgerdb
 import (
 	"github.com/cordalace/wireguard-for-homies/internal/db"
 	"github.com/cordalace/wireguard-for-homies/internal/models"
-	"github.com/dgraph-io/badger"
+	badger "github.com/dgraph-io/badger/v2"
 	"github.com/google/uuid"
 )
 
