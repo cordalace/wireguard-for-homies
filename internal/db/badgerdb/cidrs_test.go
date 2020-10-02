@@ -8,10 +8,10 @@ import (
 	"github.com/google/uuid"
 )
 
-func ipNetMustParse(s string) *net.IPNet {
+func ipNetMustParse(t *testing.T, s string) *net.IPNet {
 	_, ret, err := net.ParseCIDR(s)
 	if err != nil {
-		panic(err)
+		t.Fatalf("net.ParseCIDR() error = %v, want nil", err)
 	}
 	return ret
 }
@@ -26,7 +26,7 @@ func TestCIDRMapToJSON(t *testing.T) {
 		{
 			name: "one cidr",
 			c: cidrMap{
-				uuid.MustParse("2eba5e83-d0c3-46f0-bbeb-884e62e19b62"): ipNetMustParse("192.168.0.0/24"),
+				uuid.MustParse("2eba5e83-d0c3-46f0-bbeb-884e62e19b62"): ipNetMustParse(t, "192.168.0.0/24"),
 			},
 			want:    `{"2eba5e83-d0c3-46f0-bbeb-884e62e19b62":"192.168.0.0/24"}`,
 			wantErr: false,
@@ -69,7 +69,7 @@ func TestCIDRMapFromJSON(t *testing.T) {
 				data: []byte(`{"2eba5e83-d0c3-46f0-bbeb-884e62e19b62":"192.168.0.0/24"}`),
 			},
 			want: cidrMap{
-				uuid.MustParse("2eba5e83-d0c3-46f0-bbeb-884e62e19b62"): ipNetMustParse("192.168.0.0/24"),
+				uuid.MustParse("2eba5e83-d0c3-46f0-bbeb-884e62e19b62"): ipNetMustParse(t, "192.168.0.0/24"),
 			},
 			wantErr: false,
 		},

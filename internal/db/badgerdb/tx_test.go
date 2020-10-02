@@ -1,6 +1,7 @@
 package badgerdb
 
 import (
+	"errors"
 	"testing"
 
 	badger "github.com/dgraph-io/badger/v2"
@@ -24,7 +25,7 @@ func setKeyValue(t *testing.T, txn *badger.Txn, key, value string) {
 
 func ensureKeyNotFound(t *testing.T, txn *badger.Txn, key string) {
 	_, err := txn.Get([]byte(key))
-	if err != badger.ErrKeyNotFound {
+	if !errors.Is(err, badger.ErrKeyNotFound) {
 		t.Fatalf("badger.Txn.Get() error = %v, want Key not found", err)
 	}
 }
