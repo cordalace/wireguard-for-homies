@@ -5,38 +5,51 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/cordalace/wireguard-for-homies/internal/inputdata"
+	"github.com/bradleyjkemp/cupaloy"
 	badger "github.com/dgraph-io/badger/v2"
 )
 
-func openInMemoryDB(t *testing.T) *badger.DB {
-	opts := badger.DefaultOptions("").WithInMemory(true)
-	ddb, err := badger.Open(opts)
-	if err != nil {
-		t.Fatalf("badger.Open() error = %v, want nil", err)
-	}
-	return ddb
-}
+type initDB int
 
-func openInMemoryDBWithData(t *testing.T) *badger.DB {
-	opts := badger.DefaultOptions("").WithInMemory(true)
-	ddb, err := badger.Open(opts)
-	if err != nil {
-		t.Fatalf("badger.Open() error = %v, want nil", err)
-	}
+const (
+	initDBEmpty = iota
+	initDBWithInput
+)
 
-	txnPrepareData := ddb.NewTransaction(true)
-	defer txnPrepareData.Discard()
-	err = (&badgerTx{txn: txnPrepareData}).LoadData(inputdata.New(inputdata.InputFileExtension(".json")).LoadT(t))
-	if err != nil {
-		t.Fatalf("badgerTx.LoadData() error = %v, want nil", err)
-	}
-	err = txnPrepareData.Commit()
-	if err != nil {
-		t.Fatalf("badger.Txn.Commit() error = %v, want nil", err)
+type txMode int
+
+const (
+	txModeReadOnly = iota
+	txModeReadWrite
+)
+
+func withTestTx(t *testing.T, init initDB, mode txMode, testFunc func(txn *badger.Txn)) {
+	var ddb *badger.DB
+	switch init {
+	case initDBEmpty:
+		ddb = openInMemoryDB(t)
+	case initDBWithInput:
+		ddb = openInMemoryDBWithData(t)
+	default:
+		t.Fatalf("unknown init db: %v", init)
 	}
 
-	return ddb
+	var txn *badger.Txn
+	switch mode {
+	case txModeReadOnly:
+		txn = ddb.NewTransaction(false)
+	case txModeReadWrite:
+		txn = ddb.NewTransaction(true)
+	default:
+		t.Fatalf("unknown tx mode: %v", mode)
+	}
+	defer txn.Discard()
+
+	testFunc(txn)
+
+	if mode == txModeReadWrite {
+		cupaloy.New(cupaloy.SnapshotFileExtension(".json")).SnapshotT(t, dumpData(t, &badgerTx{txn: txn}))
+	}
 }
 
 func setKeyValue(t *testing.T, txn *badger.Txn, key string, value []byte) {
@@ -80,8 +93,6 @@ func TestBadgerTxCommit(t *testing.T) {
 
 	// write key
 	setKeyValue(t, txnWrite, key, wantValue)
-	// ensure key written
-	assertKeyValue(t, txnWrite, key, wantValue)
 	// ensure key is not visible in a separate transaction yet
 	ensureKeyNotFound(t, txnReadBefore, key)
 
@@ -106,8 +117,6 @@ func TestBadgerTxRollback(t *testing.T) {
 
 	// write key
 	setKeyValue(t, txnWrite, key, wantValue)
-	// ensure key written
-	assertKeyValue(t, txnWrite, key, wantValue)
 	// ensure key is not visible in a separate transaction
 	ensureKeyNotFound(t, txnReadBefore, key)
 

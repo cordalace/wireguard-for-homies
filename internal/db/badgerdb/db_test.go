@@ -5,8 +5,39 @@ import (
 	"testing"
 
 	"github.com/cordalace/wireguard-for-homies/internal/db"
+	"github.com/cordalace/wireguard-for-homies/internal/inputdata"
 	badger "github.com/dgraph-io/badger/v2"
 )
+
+func openInMemoryDB(t *testing.T) *badger.DB {
+	opts := badger.DefaultOptions("").WithInMemory(true)
+	ddb, err := badger.Open(opts)
+	if err != nil {
+		t.Fatalf("badger.Open() error = %v, want nil", err)
+	}
+	return ddb
+}
+
+func openInMemoryDBWithData(t *testing.T) *badger.DB {
+	opts := badger.DefaultOptions("").WithInMemory(true)
+	ddb, err := badger.Open(opts)
+	if err != nil {
+		t.Fatalf("badger.Open() error = %v, want nil", err)
+	}
+
+	txnPrepareData := ddb.NewTransaction(true)
+	defer txnPrepareData.Discard()
+	err = (&badgerTx{txn: txnPrepareData}).LoadData(inputdata.New(inputdata.InputFileExtension(".json")).LoadT(t))
+	if err != nil {
+		t.Fatalf("badgerTx.LoadData() error = %v, want nil", err)
+	}
+	err = txnPrepareData.Commit()
+	if err != nil {
+		t.Fatalf("badger.Txn.Commit() error = %v, want nil", err)
+	}
+
+	return ddb
+}
 
 func TestNewBadgerDB(t *testing.T) {
 	opts := badger.DefaultOptions("").WithInMemory(true)
@@ -35,11 +66,7 @@ func TestBadgerDBInit(t *testing.T) {
 }
 
 func TestBadgerDBClose(t *testing.T) {
-	opts := badger.DefaultOptions("").WithInMemory(true)
-	db, err := badger.Open(opts)
-	if err != nil {
-		t.Fatalf("badger.Open() error = %v, wantErr nil", err)
-	}
+	ddb, opts := openInMemoryDB(t), badger.DefaultOptions("").WithInMemory(true)
 	type fields struct {
 		db   *badger.DB
 		opts badger.Options
@@ -62,7 +89,7 @@ func TestBadgerDBClose(t *testing.T) {
 		{
 			name: "close badger db",
 			fields: fields{
-				db:   db,
+				db:   ddb,
 				opts: opts,
 			},
 			wantErr: false,
@@ -87,11 +114,7 @@ func TestBadgerDBClose(t *testing.T) {
 }
 
 func TestBadgerDBBegin(t *testing.T) {
-	opts := badger.DefaultOptions("").WithInMemory(true)
-	ddb, err := badger.Open(opts)
-	if err != nil {
-		t.Fatalf("badger.Open() error = %v, wantErr nil", err)
-	}
+	ddb, opts := openInMemoryDB(t), badger.DefaultOptions("").WithInMemory(true)
 	txnRead := ddb.NewTransaction(false)
 	defer txnRead.Discard()
 	txnWrite := ddb.NewTransaction(true)

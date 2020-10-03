@@ -3,7 +3,7 @@ package badgerdb
 import (
 	"testing"
 
-	"github.com/bradleyjkemp/cupaloy"
+	badger "github.com/dgraph-io/badger/v2"
 )
 
 func TestBadgerTxGetOrCreateDeviceName(t *testing.T) {
@@ -32,21 +32,17 @@ func TestBadgerTxGetOrCreateDeviceName(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt // pin!
 		t.Run(tt.name, func(t *testing.T) {
-			ddb := openInMemoryDBWithData(t)
-			txnWrite := ddb.NewTransaction(true)
-			defer txnWrite.Discard()
-			tx := &badgerTx{
-				txn: txnWrite,
-			}
-			got, err := tx.GetOrCreateDeviceName(tt.args.defaultDeviceName)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("badgerTx.GetOrCreateDeviceName() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if got != tt.want {
-				t.Errorf("badgerTx.GetOrCreateDeviceName() = %v, want %v", got, tt.want)
-			}
-			cupaloy.New(cupaloy.SnapshotFileExtension(".json")).SnapshotT(t, dumpData(t, tx))
+			withTestTx(t, initDBWithInput, txModeReadWrite, func(txn *badger.Txn) {
+				tx := &badgerTx{txn: txn}
+				got, err := tx.GetOrCreateDeviceName(tt.args.defaultDeviceName)
+				if (err != nil) != tt.wantErr {
+					t.Errorf("badgerTx.GetOrCreateDeviceName() error = %v, wantErr %v", err, tt.wantErr)
+					return
+				}
+				if got != tt.want {
+					t.Errorf("badgerTx.GetOrCreateDeviceName() = %v, want %v", got, tt.want)
+				}
+			})
 		})
 	}
 }

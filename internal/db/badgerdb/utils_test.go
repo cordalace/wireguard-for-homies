@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/bradleyjkemp/cupaloy"
+	badger "github.com/dgraph-io/badger/v2"
 )
 
 func TestFmtDBKey(t *testing.T) {
@@ -48,22 +48,17 @@ func TestBadgerTxGetOrCreate(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt // pin!
 		t.Run(tt.name, func(t *testing.T) {
-			ddb := openInMemoryDBWithData(t)
-
-			txnWrite := ddb.NewTransaction(true)
-			defer txnWrite.Discard()
-			tx := &badgerTx{
-				txn: txnWrite,
-			}
-			got, err := tx.getOrCreate(tt.args.key, tt.args.value)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("badgerTx.getOrCreate() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("badgerTx.getOrCreate() = %v, want %v", string(got), string(tt.want))
-			}
-			cupaloy.New(cupaloy.SnapshotFileExtension(".json")).SnapshotT(t, dumpData(t, tx))
+			withTestTx(t, initDBWithInput, txModeReadWrite, func(txn *badger.Txn) {
+				tx := &badgerTx{txn: txn}
+				got, err := tx.getOrCreate(tt.args.key, tt.args.value)
+				if (err != nil) != tt.wantErr {
+					t.Errorf("badgerTx.getOrCreate() error = %v, wantErr %v", err, tt.wantErr)
+					return
+				}
+				if !reflect.DeepEqual(got, tt.want) {
+					t.Errorf("badgerTx.getOrCreate() = %v, want %v", string(got), string(tt.want))
+				}
+			})
 		})
 	}
 }
@@ -101,21 +96,17 @@ func TestBadgerTxGetOrDefault(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt // pin!
 		t.Run(tt.name, func(t *testing.T) {
-			ddb := openInMemoryDBWithData(t)
-
-			txnRead := ddb.NewTransaction(false)
-			defer txnRead.Discard()
-			tx := &badgerTx{
-				txn: txnRead,
-			}
-			got, err := tx.getOrDefault(tt.args.key, tt.args.value)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("badgerTx.getOrCreate() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("badgerTx.getOrCreate() = %v, want %v", string(got), string(tt.want))
-			}
+			withTestTx(t, initDBWithInput, txModeReadOnly, func(txn *badger.Txn) {
+				tx := &badgerTx{txn: txn}
+				got, err := tx.getOrDefault(tt.args.key, tt.args.value)
+				if (err != nil) != tt.wantErr {
+					t.Errorf("badgerTx.getOrDefault() error = %v, wantErr %v", err, tt.wantErr)
+					return
+				}
+				if !reflect.DeepEqual(got, tt.want) {
+					t.Errorf("badgerTx.getOrDefault() = %v, want %v", string(got), string(tt.want))
+				}
+			})
 		})
 	}
 }
