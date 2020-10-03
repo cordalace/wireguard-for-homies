@@ -5,7 +5,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/bradleyjkemp/cupaloy"
+	badger "github.com/dgraph-io/badger/v2"
 	"github.com/google/uuid"
 )
 
@@ -152,36 +152,31 @@ func TestBadgerTxGetCIDRMap(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt // pin!
 		t.Run(tt.name, func(t *testing.T) {
-			ddb := openInMemoryDBWithData(t)
-			txnRead := ddb.NewTransaction(false)
-			defer txnRead.Discard()
-			tx := &badgerTx{
-				txn: txnRead,
-			}
-			got, err := tx.getCIDRMap()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("badgerTx.getCIDRMap() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("badgerTx.getCIDRMap() = %v, want %v", got, tt.want)
-			}
+			withTestTx(t, initDBWithInput, txModeReadOnly, func(txn *badger.Txn) {
+				tx := &badgerTx{txn: txn}
+				got, err := tx.getCIDRMap()
+				if (err != nil) != tt.wantErr {
+					t.Errorf("badgerTx.getCIDRMap() error = %v, wantErr %v", err, tt.wantErr)
+					return
+				}
+				if !reflect.DeepEqual(got, tt.want) {
+					t.Errorf("badgerTx.getCIDRMap() = %v, want %v", got, tt.want)
+				}
+			})
 		})
 	}
 }
 
 func TestBadgerTxSaveCIDRMap(t *testing.T) {
-	ddb := openInMemoryDB(t)
-	txnWrite := ddb.NewTransaction(true)
-	defer txnWrite.Discard()
-	tx := &badgerTx{txn: txnWrite}
-	err := tx.saveCIDRMap(cidrMap{
-		uuid.MustParse("2eba5e83-d0c3-46f0-bbeb-884e62e19b62"): ipNetMustParse(t, "192.168.0.0/24"),
+	withTestTx(t, initDBEmpty, txModeReadWrite, func(txn *badger.Txn) {
+		tx := &badgerTx{txn: txn}
+		err := tx.saveCIDRMap(cidrMap{
+			uuid.MustParse("2eba5e83-d0c3-46f0-bbeb-884e62e19b62"): ipNetMustParse(t, "192.168.0.0/24"),
+		})
+		if err != nil {
+			t.Fatalf("badgerTx.saveCIDRMap() error = %v, want nil", err)
+		}
 	})
-	if err != nil {
-		t.Fatalf("badgerTx.saveCIDRMap() error = %v, want nil", err)
-	}
-	cupaloy.New(cupaloy.SnapshotFileExtension(".json")).SnapshotT(t, dumpData(t, tx))
 }
 
 func TestBadgerTxGetSubnetCIDRs(t *testing.T) {
@@ -204,20 +199,17 @@ func TestBadgerTxGetSubnetCIDRs(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt // pin!
 		t.Run(tt.name, func(t *testing.T) {
-			ddb := openInMemoryDBWithData(t)
-			txnRead := ddb.NewTransaction(false)
-			defer txnRead.Discard()
-			tr := &badgerTx{
-				txn: txnRead,
-			}
-			got, err := tr.GetSubnetCIDRs()
-			if (err != nil) != tt.wantErr {
-				t.Errorf("badgerTx.GetSubnetCIDRs() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("badgerTx.GetSubnetCIDRs() = %v, want %v", got, tt.want)
-			}
+			withTestTx(t, initDBWithInput, txModeReadOnly, func(txn *badger.Txn) {
+				tr := &badgerTx{txn: txn}
+				got, err := tr.GetSubnetCIDRs()
+				if (err != nil) != tt.wantErr {
+					t.Errorf("badgerTx.GetSubnetCIDRs() error = %v, wantErr %v", err, tt.wantErr)
+					return
+				}
+				if !reflect.DeepEqual(got, tt.want) {
+					t.Errorf("badgerTx.GetSubnetCIDRs() = %v, want %v", got, tt.want)
+				}
+			})
 		})
 	}
 }
