@@ -10,23 +10,21 @@ import (
 const subnetPrefix = "subnet"
 
 func (t *badgerTx) CreateSubnet(subnet *models.Subnet) (*models.Subnet, error) {
-	var (
-		subnetID uuid.UUID
-		err      error
-	)
-	if subnet.ID == uuid.Nil {
-		subnetID, err = uuid.NewRandom()
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		subnetID = subnet.ID
+	key := fmtDBKey(subnetPrefix, subnet.ID.String())
+
+	exists, err := t.exists(key)
+	if err != nil {
+		return nil, err
 	}
+	if exists {
+		return nil, db.ErrAlreadyExists
+	}
+
 	subnetJSON, err := subnet.ToJSON()
 	if err != nil {
 		return nil, err
 	}
-	err = t.txn.Set(fmtDBKey(subnetPrefix, subnetID.String()), subnetJSON)
+	err = t.txn.Set(key, subnetJSON)
 	if err != nil {
 		return nil, err
 	}
@@ -36,21 +34,21 @@ func (t *badgerTx) CreateSubnet(subnet *models.Subnet) (*models.Subnet, error) {
 		return nil, err
 	}
 
-	c[subnetID] = subnet.CIDR
+	c[subnet.ID] = subnet.CIDR
 
 	err = t.saveCIDRMap(c)
 	if err != nil {
 		return nil, err
 	}
 
-	return &models.Subnet{ID: subnetID, CIDR: subnet.CIDR}, nil
+	return &models.Subnet{ID: subnet.ID, CIDR: subnet.CIDR}, nil
 }
 
 func (t *badgerTx) GetSubnet(id uuid.UUID) (*models.Subnet, error) {
 	item, err := t.txn.Get(fmtDBKey(subnetPrefix, id.String()))
 	switch err {
 	case badger.ErrKeyNotFound:
-		return nil, db.ErrSubnetNotFound
+		return nil, db.ErrNotFound
 	case nil:
 		var (
 			value   []byte
@@ -67,7 +65,17 @@ func (t *badgerTx) GetSubnet(id uuid.UUID) (*models.Subnet, error) {
 }
 
 func (t *badgerTx) DeleteSubnet(id uuid.UUID) error {
-	err := t.txn.Delete(fmtDBKey(subnetPrefix, id.String()))
+	key := fmtDBKey(subnetPrefix, id.String())
+
+	exists, err := t.exists(key)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return db.ErrNotFound
+	}
+
+	err = t.txn.Delete(key)
 	if err != nil {
 		return err
 	}

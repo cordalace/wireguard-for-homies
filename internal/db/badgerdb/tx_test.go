@@ -1,9 +1,11 @@
 package badgerdb
 
 import (
+	"bytes"
 	"errors"
 	"testing"
 
+	"github.com/cordalace/wireguard-for-homies/internal/inputdata"
 	badger "github.com/dgraph-io/badger/v2"
 )
 
@@ -16,8 +18,29 @@ func openInMemoryDB(t *testing.T) *badger.DB {
 	return ddb
 }
 
-func setKeyValue(t *testing.T, txn *badger.Txn, key, value string) {
-	err := txn.Set([]byte(key), []byte(value))
+func openInMemoryDBWithData(t *testing.T) *badger.DB {
+	opts := badger.DefaultOptions("").WithInMemory(true)
+	ddb, err := badger.Open(opts)
+	if err != nil {
+		t.Fatalf("badger.Open() error = %v, want nil", err)
+	}
+
+	txnPrepareData := ddb.NewTransaction(true)
+	defer txnPrepareData.Discard()
+	err = (&badgerTx{txn: txnPrepareData}).LoadData(inputdata.New(inputdata.InputFileExtension(".json")).LoadT(t))
+	if err != nil {
+		t.Fatalf("badgerTx.LoadData() error = %v, want nil", err)
+	}
+	err = txnPrepareData.Commit()
+	if err != nil {
+		t.Fatalf("badger.Txn.Commit() error = %v, want nil", err)
+	}
+
+	return ddb
+}
+
+func setKeyValue(t *testing.T, txn *badger.Txn, key string, value []byte) {
+	err := txn.Set([]byte(key), value)
 	if err != nil {
 		t.Fatalf("badger.Txn.Set() error = %v, want nil", err)
 	}
@@ -30,21 +53,20 @@ func ensureKeyNotFound(t *testing.T, txn *badger.Txn, key string) {
 	}
 }
 
-func assertKeyValue(t *testing.T, txn *badger.Txn, key, wantValue string) {
+func assertKeyValue(t *testing.T, txn *badger.Txn, key string, wantValue []byte) {
 	item, err := txn.Get([]byte(key))
 	if err != nil {
 		t.Fatalf("badger.Txn.Get() error = %v, want nil", err)
 	}
 
-	var gotValueBytes []byte
-	gotValueBytes, err = item.ValueCopy(gotValueBytes)
+	var gotValue []byte
+	gotValue, err = item.ValueCopy(gotValue)
 	if err != nil {
 		t.Fatalf("badger.Item.ValueCopy() error = %v, want nil", err)
 	}
 
-	gotValue := string(gotValueBytes)
-	if gotValue != wantValue {
-		t.Fatalf("badger.Txn.Get() = %v, want %v", gotValue, wantValue)
+	if !bytes.Equal(gotValue, wantValue) {
+		t.Fatalf("badger.Txn.Get() = %v, want %v", string(gotValue), string(wantValue))
 	}
 }
 
@@ -54,7 +76,7 @@ func TestBadgerTxCommit(t *testing.T) {
 	defer txnWrite.Discard()
 	txnReadBefore := ddb.NewTransaction(false)
 	defer txnReadBefore.Discard()
-	tx, key, wantValue := &badgerTx{txn: txnWrite}, "testKey", "testValue"
+	tx, key, wantValue := &badgerTx{txn: txnWrite}, "testKey", []byte("testValue")
 
 	// write key
 	setKeyValue(t, txnWrite, key, wantValue)
@@ -80,7 +102,7 @@ func TestBadgerTxRollback(t *testing.T) {
 	defer txnWrite.Discard()
 	txnReadBefore := ddb.NewTransaction(false)
 	defer txnReadBefore.Discard()
-	tx, key, wantValue := &badgerTx{txn: txnWrite}, "testKey", "testValue"
+	tx, key, wantValue := &badgerTx{txn: txnWrite}, "testKey", []byte("testValue")
 
 	// write key
 	setKeyValue(t, txnWrite, key, wantValue)

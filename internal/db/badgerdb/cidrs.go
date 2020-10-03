@@ -47,7 +47,7 @@ func cidrMapFromJSON(data []byte) (cidrMap, error) {
 }
 
 func (t *badgerTx) getCIDRMap() (cidrMap, error) {
-	value, err := getOrCreate(t.txn, cidrMapKey, []byte("{}"))
+	value, err := t.getOrDefault(cidrMapKey, []byte("{}"))
 	if err != nil {
 		return nil, err
 	}
@@ -64,7 +64,7 @@ func (t *badgerTx) saveCIDRMap(c cidrMap) error {
 }
 
 func (t *badgerTx) GetSubnetCIDRs() ([]*net.IPNet, error) {
-	value, err := getOrCreate(t.txn, cidrMapKey, []byte("{}"))
+	value, err := t.getOrDefault(cidrMapKey, []byte("{}"))
 	if err != nil {
 		return nil, err
 	}

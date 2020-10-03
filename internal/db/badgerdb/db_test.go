@@ -92,6 +92,11 @@ func TestBadgerDBBegin(t *testing.T) {
 	if err != nil {
 		t.Fatalf("badger.Open() error = %v, wantErr nil", err)
 	}
+	txnRead := ddb.NewTransaction(false)
+	defer txnRead.Discard()
+	txnWrite := ddb.NewTransaction(true)
+	defer txnWrite.Discard()
+
 	type fields struct {
 		db   *badger.DB
 		opts badger.Options
@@ -127,7 +132,7 @@ func TestBadgerDBBegin(t *testing.T) {
 			args: args{
 				mode: db.TxModeReadOnly,
 			},
-			want:    &badgerTx{txn: ddb.NewTransaction(false)},
+			want:    &badgerTx{txn: txnRead},
 			wantErr: false,
 		},
 		{
@@ -139,7 +144,7 @@ func TestBadgerDBBegin(t *testing.T) {
 			args: args{
 				mode: db.TxModeReadWrite,
 			},
-			want:    &badgerTx{txn: ddb.NewTransaction(true)},
+			want:    &badgerTx{txn: txnWrite},
 			wantErr: false,
 		},
 	}

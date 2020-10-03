@@ -5,6 +5,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/bradleyjkemp/cupaloy"
 	"github.com/google/uuid"
 )
 
@@ -124,6 +125,98 @@ func TestCIDRMapFromJSON(t *testing.T) {
 			}
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("cidrMapFromJSON() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestBadgerTxGetCIDRMap(t *testing.T) {
+	tests := []struct {
+		name    string
+		want    cidrMap
+		wantErr bool
+	}{
+		{
+			name: "get",
+			want: cidrMap{
+				uuid.MustParse("2eba5e83-d0c3-46f0-bbeb-884e62e19b62"): ipNetMustParse(t, "192.168.0.0/24"),
+			},
+			wantErr: false,
+		},
+		{
+			name:    "default",
+			want:    cidrMap{},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		tt := tt // pin!
+		t.Run(tt.name, func(t *testing.T) {
+			ddb := openInMemoryDBWithData(t)
+			txnRead := ddb.NewTransaction(false)
+			defer txnRead.Discard()
+			tx := &badgerTx{
+				txn: txnRead,
+			}
+			got, err := tx.getCIDRMap()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("badgerTx.getCIDRMap() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("badgerTx.getCIDRMap() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestBadgerTxSaveCIDRMap(t *testing.T) {
+	ddb := openInMemoryDB(t)
+	txnWrite := ddb.NewTransaction(true)
+	defer txnWrite.Discard()
+	tx := &badgerTx{txn: txnWrite}
+	err := tx.saveCIDRMap(cidrMap{
+		uuid.MustParse("2eba5e83-d0c3-46f0-bbeb-884e62e19b62"): ipNetMustParse(t, "192.168.0.0/24"),
+	})
+	if err != nil {
+		t.Fatalf("badgerTx.saveCIDRMap() error = %v, want nil", err)
+	}
+	cupaloy.New(cupaloy.SnapshotFileExtension(".json")).SnapshotT(t, dumpData(t, tx))
+}
+
+func TestBadgerTxGetSubnetCIDRs(t *testing.T) {
+	tests := []struct {
+		name    string
+		want    []*net.IPNet
+		wantErr bool
+	}{
+		{
+			name:    "default",
+			want:    []*net.IPNet{},
+			wantErr: false,
+		},
+		{
+			name:    "get",
+			want:    []*net.IPNet{ipNetMustParse(t, "192.168.0.0/24")},
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		tt := tt // pin!
+		t.Run(tt.name, func(t *testing.T) {
+			ddb := openInMemoryDBWithData(t)
+			txnRead := ddb.NewTransaction(false)
+			defer txnRead.Discard()
+			tr := &badgerTx{
+				txn: txnRead,
+			}
+			got, err := tr.GetSubnetCIDRs()
+			if (err != nil) != tt.wantErr {
+				t.Errorf("badgerTx.GetSubnetCIDRs() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("badgerTx.GetSubnetCIDRs() = %v, want %v", got, tt.want)
 			}
 		})
 	}

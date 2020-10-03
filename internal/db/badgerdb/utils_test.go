@@ -1,9 +1,10 @@
 package badgerdb
 
 import (
+	"reflect"
 	"testing"
 
-	badger "github.com/dgraph-io/badger/v2"
+	"github.com/bradleyjkemp/cupaloy"
 )
 
 func TestFmtDBKey(t *testing.T) {
@@ -14,26 +15,107 @@ func TestFmtDBKey(t *testing.T) {
 	}
 }
 
-func TestGetOrCreateCreate(t *testing.T) {
-	opt := badger.DefaultOptions("").WithInMemory(true)
-	db, err := badger.Open(opt)
-	if err != nil {
-		t.Fatalf("error creating in memory database: %v", err)
+func TestBadgerTxGetOrCreate(t *testing.T) {
+	type args struct {
+		key   string
+		value []byte
 	}
-	defer db.Close()
-
-	txn := db.NewTransaction(true)
-	defer txn.Discard()
-
-	expected := "test value"
-	actualBytes, err := getOrCreate(txn, "testKey", []byte(expected))
-	if err != nil {
-		t.Fatalf("error calling getOrCreate: %v", err)
+	tests := []struct {
+		name    string
+		args    args
+		want    []byte
+		wantErr bool
+	}{
+		{
+			name: "create",
+			args: args{
+				key:   "testKey",
+				value: []byte(`"test value"`),
+			},
+			want:    []byte(`"test value"`),
+			wantErr: false,
+		},
+		{
+			name: "get",
+			args: args{
+				key:   "testKey",
+				value: []byte(`"test value"`),
+			},
+			want:    []byte(`"other value"`),
+			wantErr: false,
+		},
 	}
+	for _, tt := range tests {
+		tt := tt // pin!
+		t.Run(tt.name, func(t *testing.T) {
+			ddb := openInMemoryDBWithData(t)
 
-	actual := string(actualBytes)
+			txnWrite := ddb.NewTransaction(true)
+			defer txnWrite.Discard()
+			tx := &badgerTx{
+				txn: txnWrite,
+			}
+			got, err := tx.getOrCreate(tt.args.key, tt.args.value)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("badgerTx.getOrCreate() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("badgerTx.getOrCreate() = %v, want %v", string(got), string(tt.want))
+			}
+			cupaloy.New(cupaloy.SnapshotFileExtension(".json")).SnapshotT(t, dumpData(t, tx))
+		})
+	}
+}
 
-	if actual != expected {
-		t.Errorf("%v != %v", actual, expected)
+func TestBadgerTxGetOrDefault(t *testing.T) {
+	type args struct {
+		key   string
+		value []byte
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    []byte
+		wantErr bool
+	}{
+		{
+			name: "default",
+			args: args{
+				key:   "testKey",
+				value: []byte(`"test value"`),
+			},
+			want:    []byte(`"test value"`),
+			wantErr: false,
+		},
+		{
+			name: "get",
+			args: args{
+				key:   "testKey",
+				value: []byte(`"test value"`),
+			},
+			want:    []byte(`"other value"`),
+			wantErr: false,
+		},
+	}
+	for _, tt := range tests {
+		tt := tt // pin!
+		t.Run(tt.name, func(t *testing.T) {
+			ddb := openInMemoryDBWithData(t)
+
+			txnRead := ddb.NewTransaction(false)
+			defer txnRead.Discard()
+			tx := &badgerTx{
+				txn: txnRead,
+			}
+			got, err := tx.getOrDefault(tt.args.key, tt.args.value)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("badgerTx.getOrCreate() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("badgerTx.getOrCreate() = %v, want %v", string(got), string(tt.want))
+			}
+		})
 	}
 }

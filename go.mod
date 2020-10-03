@@ -4,6 +4,7 @@ go 1.14
 
 require (
 	github.com/apparentlymart/go-cidr v1.1.0
+	github.com/bradleyjkemp/cupaloy v2.3.0+incompatible
 	github.com/dgraph-io/badger/v2 v2.2007.2
 	github.com/google/uuid v1.1.1
 	github.com/vishvananda/netlink v1.1.0
