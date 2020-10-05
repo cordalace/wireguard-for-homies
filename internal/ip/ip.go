@@ -12,6 +12,7 @@ type IP interface {
 	LinkAddWg(linkName string) error
 	LinkDelWg(linkName string) error
 	AddrAdd(linkName string, addr *net.IPNet) error
+	ListAddrCIDRs() ([]*net.IPNet, error)
 }
 
 func NewIP() IP {
