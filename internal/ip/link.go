@@ -1,4 +1,4 @@
-package manager
+package ip
 
 import "github.com/vishvananda/netlink"
 
@@ -14,4 +14,20 @@ func (wg *wgLink) Attrs() *netlink.LinkAttrs {
 
 func (wg *wgLink) Type() string {
 	return "wireguard"
+}
+
+func getWgLink(name string) netlink.Link {
+	la := netlink.NewLinkAttrs()
+	la.Name = name
+	wg := &wgLink{LinkAttrs: la}
+
+	return wg
+}
+
+func (i *ip) LinkAddWg(linkName string) error {
+	return i.netlinkHandle.LinkAdd(getWgLink(linkName))
+}
+
+func (i *ip) LinkDelWg(linkName string) error {
+	return i.netlinkHandle.LinkDel(getWgLink(linkName))
 }

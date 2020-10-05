@@ -2,9 +2,9 @@ package main
 
 import (
 	"github.com/cordalace/wireguard-for-homies/internal/db/badgerdb"
+	"github.com/cordalace/wireguard-for-homies/internal/ip"
 	"github.com/cordalace/wireguard-for-homies/internal/manager"
 	badger "github.com/dgraph-io/badger/v2"
-	"github.com/vishvananda/netlink"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -41,11 +41,12 @@ func main() {
 	}
 	defer loggerSync(logger)
 
-	netlinkHandle, err := netlink.NewHandle()
+	i := ip.NewIP()
+	err = i.Init()
 	if err != nil {
-		logger.Fatal("error creating netlink handle", zap.Error(err))
+		logger.Fatal("error creating ip", zap.Error(err))
 	}
-	defer netlinkHandle.Delete()
+	defer i.Close()
 
 	badgerOptions := badger.DefaultOptions("/tmp/badger")
 	badgerDB := badgerdb.NewBadgerDB(badgerOptions)
@@ -55,7 +56,7 @@ func main() {
 	}
 	defer badgerDB.Close()
 
-	wgManager := manager.NewManager(badgerDB.AsManagerDB(), netlinkHandle, logger)
+	wgManager := manager.NewManager(badgerDB.AsManagerDB(), i, logger)
 	err = wgManager.Init()
 	if err != nil {
 		logger.Fatal("error initializing wireguard", zap.Error(err))
