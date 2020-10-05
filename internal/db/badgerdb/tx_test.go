@@ -48,7 +48,7 @@ func withTestTx(t *testing.T, init initDB, mode txMode, testFunc func(txn *badge
 	testFunc(txn)
 
 	if mode == txModeReadWrite {
-		cupaloy.New(cupaloy.SnapshotFileExtension(".json")).SnapshotT(t, dumpData(t, &badgerTx{txn: txn}))
+		cupaloy.New(cupaloy.SnapshotFileExtension(".json")).SnapshotT(t, dumpData(t, &BadgerTx{txn: txn}))
 	}
 }
 
@@ -89,7 +89,7 @@ func TestBadgerTxCommit(t *testing.T) {
 	defer txnWrite.Discard()
 	txnReadBefore := ddb.NewTransaction(false)
 	defer txnReadBefore.Discard()
-	tx, key, wantValue := &badgerTx{txn: txnWrite}, "testKey", []byte("testValue")
+	tx, key, wantValue := &BadgerTx{txn: txnWrite}, "testKey", []byte("testValue")
 
 	// write key
 	setKeyValue(t, txnWrite, key, wantValue)
@@ -98,7 +98,7 @@ func TestBadgerTxCommit(t *testing.T) {
 
 	err := tx.Commit()
 	if err != nil {
-		t.Fatalf("badgerTx.Commit() error = %v, want nil", err)
+		t.Fatalf("BadgerTx.Commit() error = %v, want nil", err)
 	}
 
 	txnReadAfter := ddb.NewTransaction(false)
@@ -113,7 +113,7 @@ func TestBadgerTxRollback(t *testing.T) {
 	defer txnWrite.Discard()
 	txnReadBefore := ddb.NewTransaction(false)
 	defer txnReadBefore.Discard()
-	tx, key, wantValue := &badgerTx{txn: txnWrite}, "testKey", []byte("testValue")
+	tx, key, wantValue := &BadgerTx{txn: txnWrite}, "testKey", []byte("testValue")
 
 	// write key
 	setKeyValue(t, txnWrite, key, wantValue)

@@ -6,7 +6,7 @@ import (
 	badger "github.com/dgraph-io/badger/v2"
 )
 
-func (t *badgerTx) DumpData() ([]byte, error) {
+func (t *BadgerTx) DumpData() ([]byte, error) {
 	dbContents := make(map[string]json.RawMessage)
 	opts := badger.DefaultIteratorOptions
 	// opts.PrefetchSize = 10
@@ -28,7 +28,7 @@ func (t *badgerTx) DumpData() ([]byte, error) {
 	return json.MarshalIndent(dbContents, "", "    ")
 }
 
-func (t *badgerTx) LoadData(data []byte) error {
+func (t *BadgerTx) LoadData(data []byte) error {
 	dbContents := make(map[string]json.RawMessage)
 	err := json.Unmarshal(data, &dbContents)
 	if err != nil {

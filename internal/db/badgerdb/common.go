@@ -2,7 +2,7 @@ package badgerdb
 
 import "encoding/json"
 
-func (t *badgerTx) GetOrCreateDeviceName(defaultDeviceName string) (string, error) {
+func (t *BadgerTx) GetOrCreateDeviceName(defaultDeviceName string) (string, error) {
 	defaultValue, err := json.Marshal(defaultDeviceName)
 	if err != nil {
 		return "", err

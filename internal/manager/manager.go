@@ -10,13 +10,13 @@ const defaultDeviceName = "wg0"
 
 // Manager operates kernel wireguard settings.
 type Manager struct {
-	db            db.DB
+	db            DB
 	netlinkHandle *netlink.Handle
 	logger        *zap.Logger
 }
 
 // NewWireguard creates new Wireguard instance.
-func NewManager(db db.DB, netlinkHandle *netlink.Handle, logger *zap.Logger) *Manager {
+func NewManager(db DB, netlinkHandle *netlink.Handle, logger *zap.Logger) *Manager {
 	return &Manager{db: db, netlinkHandle: netlinkHandle, logger: logger}
 }
 

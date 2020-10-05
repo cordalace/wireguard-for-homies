@@ -55,7 +55,7 @@ func main() {
 	}
 	defer badgerDB.Close()
 
-	wgManager := manager.NewManager(badgerDB, netlinkHandle, logger)
+	wgManager := manager.NewManager(badgerDB.AsManagerDB(), netlinkHandle, logger)
 	err = wgManager.Init()
 	if err != nil {
 		logger.Fatal("error initializing wireguard", zap.Error(err))

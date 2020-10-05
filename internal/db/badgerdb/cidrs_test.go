@@ -153,14 +153,14 @@ func TestBadgerTxGetCIDRMap(t *testing.T) {
 		tt := tt // pin!
 		t.Run(tt.name, func(t *testing.T) {
 			withTestTx(t, initDBWithInput, txModeReadOnly, func(txn *badger.Txn) {
-				tx := &badgerTx{txn: txn}
+				tx := &BadgerTx{txn: txn}
 				got, err := tx.getCIDRMap()
 				if (err != nil) != tt.wantErr {
-					t.Errorf("badgerTx.getCIDRMap() error = %v, wantErr %v", err, tt.wantErr)
+					t.Errorf("BadgerTx.getCIDRMap() error = %v, wantErr %v", err, tt.wantErr)
 					return
 				}
 				if !reflect.DeepEqual(got, tt.want) {
-					t.Errorf("badgerTx.getCIDRMap() = %v, want %v", got, tt.want)
+					t.Errorf("BadgerTx.getCIDRMap() = %v, want %v", got, tt.want)
 				}
 			})
 		})
@@ -169,12 +169,12 @@ func TestBadgerTxGetCIDRMap(t *testing.T) {
 
 func TestBadgerTxSaveCIDRMap(t *testing.T) {
 	withTestTx(t, initDBEmpty, txModeReadWrite, func(txn *badger.Txn) {
-		tx := &badgerTx{txn: txn}
+		tx := &BadgerTx{txn: txn}
 		err := tx.saveCIDRMap(cidrMap{
 			uuid.MustParse("2eba5e83-d0c3-46f0-bbeb-884e62e19b62"): ipNetMustParse(t, "192.168.0.0/24"),
 		})
 		if err != nil {
-			t.Fatalf("badgerTx.saveCIDRMap() error = %v, want nil", err)
+			t.Fatalf("BadgerTx.saveCIDRMap() error = %v, want nil", err)
 		}
 	})
 }
@@ -200,14 +200,14 @@ func TestBadgerTxGetSubnetCIDRs(t *testing.T) {
 		tt := tt // pin!
 		t.Run(tt.name, func(t *testing.T) {
 			withTestTx(t, initDBWithInput, txModeReadOnly, func(txn *badger.Txn) {
-				tr := &badgerTx{txn: txn}
+				tr := &BadgerTx{txn: txn}
 				got, err := tr.GetSubnetCIDRs()
 				if (err != nil) != tt.wantErr {
-					t.Errorf("badgerTx.GetSubnetCIDRs() error = %v, wantErr %v", err, tt.wantErr)
+					t.Errorf("BadgerTx.GetSubnetCIDRs() error = %v, wantErr %v", err, tt.wantErr)
 					return
 				}
 				if !reflect.DeepEqual(got, tt.want) {
-					t.Errorf("badgerTx.GetSubnetCIDRs() = %v, want %v", got, tt.want)
+					t.Errorf("BadgerTx.GetSubnetCIDRs() = %v, want %v", got, tt.want)
 				}
 			})
 		})

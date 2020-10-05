@@ -49,14 +49,14 @@ func TestBadgerTxGetOrCreate(t *testing.T) {
 		tt := tt // pin!
 		t.Run(tt.name, func(t *testing.T) {
 			withTestTx(t, initDBWithInput, txModeReadWrite, func(txn *badger.Txn) {
-				tx := &badgerTx{txn: txn}
+				tx := &BadgerTx{txn: txn}
 				got, err := tx.getOrCreate(tt.args.key, tt.args.value)
 				if (err != nil) != tt.wantErr {
-					t.Errorf("badgerTx.getOrCreate() error = %v, wantErr %v", err, tt.wantErr)
+					t.Errorf("BadgerTx.getOrCreate() error = %v, wantErr %v", err, tt.wantErr)
 					return
 				}
 				if !reflect.DeepEqual(got, tt.want) {
-					t.Errorf("badgerTx.getOrCreate() = %v, want %v", string(got), string(tt.want))
+					t.Errorf("BadgerTx.getOrCreate() = %v, want %v", string(got), string(tt.want))
 				}
 			})
 		})
@@ -97,14 +97,14 @@ func TestBadgerTxGetOrDefault(t *testing.T) {
 		tt := tt // pin!
 		t.Run(tt.name, func(t *testing.T) {
 			withTestTx(t, initDBWithInput, txModeReadOnly, func(txn *badger.Txn) {
-				tx := &badgerTx{txn: txn}
+				tx := &BadgerTx{txn: txn}
 				got, err := tx.getOrDefault(tt.args.key, tt.args.value)
 				if (err != nil) != tt.wantErr {
-					t.Errorf("badgerTx.getOrDefault() error = %v, wantErr %v", err, tt.wantErr)
+					t.Errorf("BadgerTx.getOrDefault() error = %v, wantErr %v", err, tt.wantErr)
 					return
 				}
 				if !reflect.DeepEqual(got, tt.want) {
-					t.Errorf("badgerTx.getOrDefault() = %v, want %v", string(got), string(tt.want))
+					t.Errorf("BadgerTx.getOrDefault() = %v, want %v", string(got), string(tt.want))
 				}
 			})
 		})

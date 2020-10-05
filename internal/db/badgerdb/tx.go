@@ -2,14 +2,14 @@ package badgerdb
 
 import badger "github.com/dgraph-io/badger/v2"
 
-type badgerTx struct {
+type BadgerTx struct {
 	txn *badger.Txn
 }
 
-func (t *badgerTx) Commit() error {
+func (t *BadgerTx) Commit() error {
 	return t.txn.Commit()
 }
 
-func (t *badgerTx) Rollback() {
+func (t *BadgerTx) Rollback() {
 	t.txn.Discard()
 }

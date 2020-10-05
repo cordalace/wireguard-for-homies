@@ -9,7 +9,7 @@ import (
 
 const subnetPrefix = "subnet"
 
-func (t *badgerTx) CreateSubnet(subnet *models.Subnet) (*models.Subnet, error) {
+func (t *BadgerTx) CreateSubnet(subnet *models.Subnet) (*models.Subnet, error) {
 	key := fmtDBKey(subnetPrefix, subnet.ID.String())
 
 	exists, err := t.exists(key)
@@ -44,7 +44,7 @@ func (t *badgerTx) CreateSubnet(subnet *models.Subnet) (*models.Subnet, error) {
 	return &models.Subnet{ID: subnet.ID, CIDR: subnet.CIDR}, nil
 }
 
-func (t *badgerTx) GetSubnet(id uuid.UUID) (*models.Subnet, error) {
+func (t *BadgerTx) GetSubnet(id uuid.UUID) (*models.Subnet, error) {
 	item, err := t.txn.Get(fmtDBKey(subnetPrefix, id.String()))
 	switch err {
 	case badger.ErrKeyNotFound:
@@ -64,7 +64,7 @@ func (t *badgerTx) GetSubnet(id uuid.UUID) (*models.Subnet, error) {
 	}
 }
 
-func (t *badgerTx) DeleteSubnet(id uuid.UUID) error {
+func (t *BadgerTx) DeleteSubnet(id uuid.UUID) error {
 	key := fmtDBKey(subnetPrefix, id.String())
 
 	exists, err := t.exists(key)

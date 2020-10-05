@@ -4,28 +4,37 @@ import (
 	"errors"
 
 	"github.com/cordalace/wireguard-for-homies/internal/db"
+	"github.com/cordalace/wireguard-for-homies/internal/manager"
 	badger "github.com/dgraph-io/badger/v2"
 )
 
 var errNotInitialized = errors.New("badger db is not initialized, call Init() first")
 
-type badgerDB struct {
+type BadgerDB struct {
 	db   *badger.DB
 	opts badger.Options
 }
 
-func NewBadgerDB(opts badger.Options) db.DB {
-	return &badgerDB{opts: opts}
+type badgerManagerDB struct {
+	BadgerDB
 }
 
-func (d *badgerDB) Init() error {
+func NewBadgerDB(opts badger.Options) *BadgerDB {
+	return &BadgerDB{opts: opts}
+}
+
+func (d *BadgerDB) AsManagerDB() manager.DB {
+	return &badgerManagerDB{BadgerDB{opts: d.opts}}
+}
+
+func (d *BadgerDB) Init() error {
 	var err error
 	d.db, err = badger.Open(d.opts)
 
 	return err
 }
 
-func (d *badgerDB) Close() error {
+func (d *BadgerDB) Close() error {
 	if d.db == nil {
 		return nil
 	}
@@ -37,12 +46,16 @@ func (d *badgerDB) Close() error {
 	return nil
 }
 
-func (d *badgerDB) Begin(mode db.TxMode) (db.Tx, error) {
+func (d *BadgerDB) Begin(mode db.TxMode) (*BadgerTx, error) {
 	if d.db == nil {
 		return nil, errNotInitialized
 	}
 	update := mode == db.TxModeReadWrite
 	txn := d.db.NewTransaction(update)
 
-	return &badgerTx{txn: txn}, nil
+	return &BadgerTx{txn: txn}, nil
+}
+
+func (d *badgerManagerDB) Begin(mode db.TxMode) (manager.Tx, error) {
+	return d.BadgerDB.Begin(mode)
 }

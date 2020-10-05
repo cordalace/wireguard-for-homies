@@ -11,7 +11,7 @@ func fmtDBKey(prefix, id string) []byte {
 }
 
 // getOrCreate returns value if key exists or returns defaultValue and creates key.
-func (t *badgerTx) getOrCreate(key string, defaultValue []byte) ([]byte, error) {
+func (t *BadgerTx) getOrCreate(key string, defaultValue []byte) ([]byte, error) {
 	var result []byte
 	item, err := t.txn.Get([]byte(key))
 
@@ -38,7 +38,7 @@ func (t *badgerTx) getOrCreate(key string, defaultValue []byte) ([]byte, error) 
 }
 
 // getOrDefault returns value if key exists or returns defaultValue and doesn't writes anything to badger.
-func (t *badgerTx) getOrDefault(key string, defaultValue []byte) ([]byte, error) {
+func (t *BadgerTx) getOrDefault(key string, defaultValue []byte) ([]byte, error) {
 	var result []byte
 	item, err := t.txn.Get([]byte(key))
 	switch err {
@@ -59,7 +59,7 @@ func (t *badgerTx) getOrDefault(key string, defaultValue []byte) ([]byte, error)
 	}
 }
 
-func (t *badgerTx) exists(key []byte) (bool, error) {
+func (t *BadgerTx) exists(key []byte) (bool, error) {
 	_, err := t.txn.Get(key)
 	switch err {
 	case badger.ErrKeyNotFound:

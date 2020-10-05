@@ -33,14 +33,14 @@ func TestBadgerTxGetOrCreateDeviceName(t *testing.T) {
 		tt := tt // pin!
 		t.Run(tt.name, func(t *testing.T) {
 			withTestTx(t, initDBWithInput, txModeReadWrite, func(txn *badger.Txn) {
-				tx := &badgerTx{txn: txn}
+				tx := &BadgerTx{txn: txn}
 				got, err := tx.GetOrCreateDeviceName(tt.args.defaultDeviceName)
 				if (err != nil) != tt.wantErr {
-					t.Errorf("badgerTx.GetOrCreateDeviceName() error = %v, wantErr %v", err, tt.wantErr)
+					t.Errorf("BadgerTx.GetOrCreateDeviceName() error = %v, wantErr %v", err, tt.wantErr)
 					return
 				}
 				if got != tt.want {
-					t.Errorf("badgerTx.GetOrCreateDeviceName() = %v, want %v", got, tt.want)
+					t.Errorf("BadgerTx.GetOrCreateDeviceName() = %v, want %v", got, tt.want)
 				}
 			})
 		})

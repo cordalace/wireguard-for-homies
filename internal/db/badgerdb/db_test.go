@@ -27,9 +27,9 @@ func openInMemoryDBWithData(t *testing.T) *badger.DB {
 
 	txnPrepareData := ddb.NewTransaction(true)
 	defer txnPrepareData.Discard()
-	err = (&badgerTx{txn: txnPrepareData}).LoadData(inputdata.New(inputdata.InputFileExtension(".json")).LoadT(t))
+	err = (&BadgerTx{txn: txnPrepareData}).LoadData(inputdata.New(inputdata.InputFileExtension(".json")).LoadT(t))
 	if err != nil {
-		t.Fatalf("badgerTx.LoadData() error = %v, want nil", err)
+		t.Fatalf("BadgerTx.LoadData() error = %v, want nil", err)
 	}
 	err = txnPrepareData.Commit()
 	if err != nil {
@@ -41,27 +41,27 @@ func openInMemoryDBWithData(t *testing.T) *badger.DB {
 
 func TestNewBadgerDB(t *testing.T) {
 	opts := badger.DefaultOptions("").WithInMemory(true)
-	want := &badgerDB{opts: opts}
+	want := &BadgerDB{opts: opts}
 	if got := NewBadgerDB(opts); !reflect.DeepEqual(got, want) {
 		t.Fatalf("NewBadgerDB() = %v, want %v", got, want)
 	}
 }
 
 func TestBadgerDBInit(t *testing.T) {
-	d := &badgerDB{
+	d := &BadgerDB{
 		db:   nil,
 		opts: badger.DefaultOptions("").WithInMemory(true),
 	}
 	if err := d.Init(); err != nil {
-		t.Fatalf("badgerDB.Init() error = %v, wantErr nil", err)
+		t.Fatalf("BadgerDB.Init() error = %v, wantErr nil", err)
 	}
 
 	if d.db == nil {
-		t.Fatalf("badgerDB.Init(), db is nil")
+		t.Fatalf("BadgerDB.Init(), db is nil")
 	}
 
 	if d.db.IsClosed() {
-		t.Fatalf("badgerDB.Init(), d.db.IsClosed() is true, want false")
+		t.Fatalf("BadgerDB.Init(), d.db.IsClosed() is true, want false")
 	}
 }
 
@@ -99,15 +99,15 @@ func TestBadgerDBClose(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt // pin!
 		t.Run(tt.name, func(t *testing.T) {
-			d := &badgerDB{
+			d := &BadgerDB{
 				db:   tt.fields.db,
 				opts: tt.fields.opts,
 			}
 			if err := d.Close(); (err != nil) != tt.wantErr {
-				t.Errorf("badgerDB.Close() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("BadgerDB.Close() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			if !reflect.DeepEqual(d.db, tt.wantDB) {
-				t.Errorf("badgerDB.Close() badgerDB.db = %v, wantDB %v", d.db, tt.wantDB)
+				t.Errorf("BadgerDB.Close() BadgerDB.db = %v, wantDB %v", d.db, tt.wantDB)
 			}
 		})
 	}
@@ -131,7 +131,7 @@ func TestBadgerDBBegin(t *testing.T) {
 		name    string
 		fields  fields
 		args    args
-		want    db.Tx
+		want    *BadgerTx
 		wantErr bool
 	}{
 		{
@@ -155,7 +155,7 @@ func TestBadgerDBBegin(t *testing.T) {
 			args: args{
 				mode: db.TxModeReadOnly,
 			},
-			want:    &badgerTx{txn: txnRead},
+			want:    &BadgerTx{txn: txnRead},
 			wantErr: false,
 		},
 		{
@@ -167,24 +167,24 @@ func TestBadgerDBBegin(t *testing.T) {
 			args: args{
 				mode: db.TxModeReadWrite,
 			},
-			want:    &badgerTx{txn: txnWrite},
+			want:    &BadgerTx{txn: txnWrite},
 			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
 		tt := tt // pin!
 		t.Run(tt.name, func(t *testing.T) {
-			d := &badgerDB{
+			d := &BadgerDB{
 				db:   tt.fields.db,
 				opts: tt.fields.opts,
 			}
 			got, err := d.Begin(tt.args.mode)
 			if (err != nil) != tt.wantErr {
-				t.Errorf("badgerDB.Begin() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("BadgerDB.Begin() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("badgerDB.Begin() = %v, want %v", got, tt.want)
+				t.Errorf("BadgerDB.Begin() = %v, want %v", got, tt.want)
 			}
 		})
 	}

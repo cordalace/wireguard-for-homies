@@ -7,10 +7,10 @@ import (
 	badger "github.com/dgraph-io/badger/v2"
 )
 
-func dumpData(t *testing.T, tx *badgerTx) []byte {
+func dumpData(t *testing.T, tx *BadgerTx) []byte {
 	data, err := tx.DumpData()
 	if err != nil {
-		t.Fatalf("badgerTx.DumpData() error = %v, want nil", err)
+		t.Fatalf("BadgerTx.DumpData() error = %v, want nil", err)
 	}
 	return data
 }
@@ -27,10 +27,10 @@ func TestBadgerTxDumpData(t *testing.T) {
 
 	txnRead := ddb.NewTransaction(false)
 	defer txnRead.Discard()
-	tx := badgerTx{txn: txnRead}
+	tx := BadgerTx{txn: txnRead}
 	data, err := tx.DumpData()
 	if err != nil {
-		t.Errorf("badgerTx.DumpData() error = %v, want nil", err)
+		t.Errorf("BadgerTx.DumpData() error = %v, want nil", err)
 	}
 
 	cupaloy.New(cupaloy.SnapshotFileExtension(".json")).SnapshotT(t, data)
@@ -40,10 +40,10 @@ func TestBadgerTxLoadDataDBState(t *testing.T) {
 	ddb := openInMemoryDB(t)
 	txnWrite := ddb.NewTransaction(true)
 	defer txnWrite.Discard()
-	tx := badgerTx{txn: txnWrite}
+	tx := BadgerTx{txn: txnWrite}
 	err := tx.LoadData([]byte(`{"testKey":"test value"}`))
 	if err != nil {
-		t.Errorf("badgerTx.LoadData() error = %v, want nil", err)
+		t.Errorf("BadgerTx.LoadData() error = %v, want nil", err)
 	}
 	err = txnWrite.Commit()
 	if err != nil {
@@ -94,11 +94,11 @@ func TestBadgerTxLoadData(t *testing.T) {
 	for _, tt := range tests {
 		tt := tt // pin!
 		t.Run(tt.name, func(t *testing.T) {
-			tr := &badgerTx{
+			tr := &BadgerTx{
 				txn: tt.fields.txn,
 			}
 			if err := tr.LoadData(tt.args.data); (err != nil) != tt.wantErr {
-				t.Errorf("badgerTx.LoadData() error = %v, wantErr %v", err, tt.wantErr)
+				t.Errorf("BadgerTx.LoadData() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
