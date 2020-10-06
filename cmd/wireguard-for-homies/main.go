@@ -1,9 +1,14 @@
 package main
 
 import (
+	"os"
+	"os/signal"
+	"syscall"
+
 	"github.com/cordalace/wireguard-for-homies/internal/db/badgerdb"
 	"github.com/cordalace/wireguard-for-homies/internal/ip"
 	"github.com/cordalace/wireguard-for-homies/internal/manager"
+	"github.com/cordalace/wireguard-for-homies/internal/telegram"
 	badger "github.com/dgraph-io/badger/v2"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -14,7 +19,8 @@ func loggerSync(logger *zap.Logger) {
 }
 
 type Config struct {
-	LogLevel zapcore.Level
+	LogLevel      zapcore.Level
+	TelegramToken string
 }
 
 func main() {
@@ -30,7 +36,8 @@ func main() {
 	// 	return
 	// }
 	cfg := Config{
-		LogLevel: zapcore.InfoLevel,
+		LogLevel:      zapcore.InfoLevel,
+		TelegramToken: os.Getenv("TOKEN"),
 	}
 
 	logConfig := zap.NewProductionConfig()
@@ -42,24 +49,44 @@ func main() {
 	defer loggerSync(logger)
 
 	i := ip.NewIP()
-	err = i.Init()
-	if err != nil {
+	if err := i.Init(); err != nil {
 		logger.Fatal("error creating ip", zap.Error(err))
 	}
 	defer i.Close()
 
 	badgerOptions := badger.DefaultOptions("/tmp/badger")
 	badgerDB := badgerdb.NewBadgerDB(badgerOptions)
-	err = badgerDB.Init()
-	if err != nil {
+
+	if err := badgerDB.Init(); err != nil {
 		logger.Fatal("error opening badger db", zap.Error(err))
 	}
 	defer badgerDB.Close()
 
 	wgManager := manager.NewManager(badgerDB.AsManagerDB(), i, logger)
-	err = wgManager.Init()
-	if err != nil {
+	if err = wgManager.Init(); err != nil {
 		logger.Fatal("error initializing wireguard", zap.Error(err))
 	}
 	defer wgManager.Close()
+
+	tg := telegram.NewTelegram(cfg.TelegramToken, logger)
+	if err = tg.Init(); err != nil {
+		logger.Fatal("error initializing telegram", zap.Error(err))
+	}
+
+	go func() {
+		if err := tg.Run(); err != nil {
+			logger.Fatal("error running telegram", zap.Error(err))
+		}
+	}()
+
+	// thanks to Sergey, pretty graceful shutdown here
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+
+	logger.Info("start graceful shutdown")
+
+	tg.Close()
+
+	logger.Info("exiting")
 }

@@ -24,7 +24,7 @@ func NewBadgerDB(opts badger.Options) *BadgerDB {
 }
 
 func (d *BadgerDB) AsManagerDB() manager.DB {
-	return &badgerManagerDB{BadgerDB{opts: d.opts}}
+	return &badgerManagerDB{BadgerDB{db: d.db, opts: d.opts}}
 }
 
 func (d *BadgerDB) Init() error {
