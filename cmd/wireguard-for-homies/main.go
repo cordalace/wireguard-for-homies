@@ -68,7 +68,7 @@ func main() {
 	}
 	defer wgManager.Close()
 
-	tg := telegram.NewTelegram(cfg.TelegramToken, logger)
+	tg := telegram.NewTelegram(badgerDB.AsTelegramDB(), cfg.TelegramToken, wgManager, logger)
 	if err = tg.Init(); err != nil {
 		logger.Fatal("error initializing telegram", zap.Error(err))
 	}

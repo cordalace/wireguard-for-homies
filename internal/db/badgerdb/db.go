@@ -5,6 +5,7 @@ import (
 
 	"github.com/cordalace/wireguard-for-homies/internal/db"
 	"github.com/cordalace/wireguard-for-homies/internal/manager"
+	"github.com/cordalace/wireguard-for-homies/internal/telegram"
 	badger "github.com/dgraph-io/badger/v2"
 )
 
@@ -19,12 +20,20 @@ type badgerManagerDB struct {
 	BadgerDB
 }
 
+type badgerTelegramDB struct {
+	BadgerDB
+}
+
 func NewBadgerDB(opts badger.Options) *BadgerDB {
 	return &BadgerDB{opts: opts}
 }
 
 func (d *BadgerDB) AsManagerDB() manager.DB {
 	return &badgerManagerDB{BadgerDB{db: d.db, opts: d.opts}}
+}
+
+func (d *BadgerDB) AsTelegramDB() telegram.DB {
+	return &badgerTelegramDB{BadgerDB{db: d.db, opts: d.opts}}
 }
 
 func (d *BadgerDB) Init() error {
@@ -57,5 +66,9 @@ func (d *BadgerDB) Begin(mode db.TxMode) (*BadgerTx, error) {
 }
 
 func (d *badgerManagerDB) Begin(mode db.TxMode) (manager.Tx, error) {
+	return d.BadgerDB.Begin(mode)
+}
+
+func (d *badgerTelegramDB) Begin(mode db.TxMode) (telegram.Tx, error) {
 	return d.BadgerDB.Begin(mode)
 }
