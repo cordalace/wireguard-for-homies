@@ -6,14 +6,14 @@ import (
 	"testing"
 
 	"github.com/cordalace/wireguard-for-homies/internal/db"
-	"github.com/cordalace/wireguard-for-homies/internal/models"
+	"github.com/cordalace/wireguard-for-homies/internal/manager"
 	badger "github.com/dgraph-io/badger/v2"
 	"github.com/google/uuid"
 )
 
 func TestBadgerTxCreateSubnet(t *testing.T) {
 	withTestTx(t, initDBEmpty, txModeReadWrite, func(txn *badger.Txn) {
-		want := &models.Subnet{
+		want := &manager.Subnet{
 			ID:   uuid.MustParse("2eba5e83-d0c3-46f0-bbeb-884e62e19b62"),
 			CIDR: ipNetMustParse(t, "192.168.0.0/24"),
 		}
@@ -30,7 +30,7 @@ func TestBadgerTxCreateSubnet(t *testing.T) {
 
 func TestBadgerTxCreateSubnetDuplicate(t *testing.T) {
 	withTestTx(t, initDBWithInput, txModeReadWrite, func(txn *badger.Txn) {
-		want := &models.Subnet{
+		want := &manager.Subnet{
 			ID:   uuid.MustParse("2eba5e83-d0c3-46f0-bbeb-884e62e19b62"),
 			CIDR: ipNetMustParse(t, "192.168.0.0/24"),
 		}
@@ -47,7 +47,7 @@ func TestBadgerTxCreateSubnetDuplicate(t *testing.T) {
 
 func TestBadgerTxGetSubnet(t *testing.T) {
 	withTestTx(t, initDBWithInput, txModeReadOnly, func(txn *badger.Txn) {
-		want := &models.Subnet{
+		want := &manager.Subnet{
 			ID:   uuid.MustParse("2eba5e83-d0c3-46f0-bbeb-884e62e19b62"),
 			CIDR: ipNetMustParse(t, "192.168.0.0/24"),
 		}

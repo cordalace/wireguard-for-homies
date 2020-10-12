@@ -10,14 +10,16 @@ import (
 )
 
 type Telegram struct {
-	db        DB
-	token     string
-	bot       *tgbotapi.BotAPI
-	wgManager *manager.Manager
-	ctx       context.Context
-	cancelCtx context.CancelFunc
-	wg        *sync.WaitGroup
-	logger    *zap.Logger
+	db                   DB
+	token                string
+	bot                  *tgbotapi.BotAPI
+	wgManager            *manager.Manager
+	fsm                  fsm
+	messageTypeByCommand map[string]messageType
+	ctx                  context.Context
+	cancelCtx            context.CancelFunc
+	wg                   *sync.WaitGroup
+	logger               *zap.Logger
 }
 
 func NewTelegram(db DB, token string, wgManager *manager.Manager, logger *zap.Logger) *Telegram {
@@ -41,7 +43,27 @@ func (t *Telegram) Init() error {
 	}
 
 	t.ctx = context.Background()
-	return nil
+
+	t.fsm = fsm{
+		fsmKey{ChatStateInitial, messageTypeCmdUnknown}:            t.commandUnrecognized,
+		fsmKey{ChatStateInitial, messageTypeText}:                  t.showHelp,
+		fsmKey{ChatStateInitial, messageTypeCmdCancel}:             t.withReadWriteTx(t.commandCancel),
+		fsmKey{ChatStateInitial, messageTypeCmdHelp}:               t.showHelp,
+		fsmKey{ChatStateInitial, messageTypeCmdNewSubnet}:          t.withReadWriteTx(t.commandNewSubnet),
+		fsmKey{ChatStateSubnetExpectCIDR, messageTypeCmdUnknown}:   t.commandUnrecognized,
+		fsmKey{ChatStateSubnetExpectCIDR, messageTypeText}:         t.withReadWriteTx(t.provideSubnetCIDR),
+		fsmKey{ChatStateSubnetExpectCIDR, messageTypeCmdCancel}:    t.withReadWriteTx(t.commandCancel),
+		fsmKey{ChatStateSubnetExpectCIDR, messageTypeCmdHelp}:      t.showHelp,
+		fsmKey{ChatStateSubnetExpectCIDR, messageTypeCmdNewSubnet}: t.withReadWriteTx(t.commandNewSubnet),
+	}
+
+	t.messageTypeByCommand = map[string]messageType{
+		"cancel":    messageTypeCmdCancel,
+		"help":      messageTypeCmdHelp,
+		"newsubnet": messageTypeCmdNewSubnet,
+	}
+
+	return t.setMyCommands()
 }
 
 func (t *Telegram) Run() error {
@@ -52,16 +74,19 @@ func (t *Telegram) Run() error {
 		return err
 	}
 
-	select {
-	case update := <-updates:
-		t.wg.Add(1)
-		go t.updateGoroutine(&update)
-	case <-t.ctx.Done():
-		t.bot.StopReceivingUpdates()
-		break
+	for {
+		select {
+		case update := <-updates:
+			t.logger.Info("received", zap.String("text", update.Message.Text))
+			t.wg.Add(1)
+			go t.updateGoroutine(&update)
+		case <-t.ctx.Done():
+			t.logger.Info("done")
+			t.bot.StopReceivingUpdates()
+			return nil
+		}
+		t.logger.Info("loop")
 	}
-
-	return nil
 }
 
 func (t *Telegram) updateGoroutine(update *tgbotapi.Update) {

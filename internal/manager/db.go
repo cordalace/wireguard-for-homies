@@ -4,7 +4,6 @@ import (
 	"net"
 
 	"github.com/cordalace/wireguard-for-homies/internal/db"
-	"github.com/cordalace/wireguard-for-homies/internal/models"
 	"github.com/google/uuid"
 )
 
@@ -16,8 +15,8 @@ type DB interface {
 type Tx interface {
 	db.Tx
 	GetOrCreateDeviceName(defaultDeviceName string) (string, error)
-	CreateSubnet(subnet *models.Subnet) (*models.Subnet, error)
-	GetSubnet(id uuid.UUID) (*models.Subnet, error)
+	CreateSubnet(subnet *Subnet) (*Subnet, error)
+	GetSubnet(id uuid.UUID) (*Subnet, error)
 	DeleteSubnet(id uuid.UUID) error
 	GetSubnetCIDRs() ([]*net.IPNet, error)
 }
