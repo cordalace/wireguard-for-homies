@@ -7,7 +7,6 @@ on:
     branches: [ master ]
 
 jobs:
-
   build:
     name: Build
     runs-on: ubuntu-latest
@@ -16,42 +15,24 @@ jobs:
       uses: actions/setup-go@v2
       with:
         go-version: ^1.15
-      id: go
     - name: Check out code into the Go module directory
       uses: actions/checkout@v2
     - name: Build
       run: go build -v ./...
-
-  test:
-    name: Test
-    runs-on: ubuntu-latest
-    steps:
-    - name: Set up Go 1.x
-      uses: actions/setup-go@v2
-      with:
-        go-version: ^1.15
-      id: go
-    - name: Check out code into the Go module directory
-      uses: actions/checkout@v2
     - name: Test
       run: go test -race -coverpkg=./... -coverprofile=coverage.txt -covermode=atomic -v ./...
     - name: Upload coverage
       run: bash <(curl -s https://codecov.io/bash)
-
-  lint:
-    name: Lint
-    runs-on: ubuntu-latest
-    steps:
-    - name: Set up Go 1.x
-      uses: actions/setup-go@v2
-      with:
-        go-version: ^1.15
-      id: go
-    - name: Check out code into the Go module directory
-      uses: actions/checkout@v2
-    - name: Test
+    - name: Lint
       uses: golangci/golangci-lint-action@v2
       with:
         # Required: the version of golangci-lint is required and must be specified without patch version: we always use the latest patch version.
         version: v1.31
         args: --enable-all -D wsl -D nlreturn -D testpackage -D funlen -D unparam -D dupl
+    - name: Check dependencies for vulnerabilities
+      run: |
+        set -e
+        nancy_version=v1.0.0
+        curl -L -o nancy https://github.com/sonatype-nexus-community/nancy/releases/download/${nancy_version}/nancy-linux.amd64-${nancy_version}
+        chmod +x nancy
+        go list -json -m all | ./nancy sleuth

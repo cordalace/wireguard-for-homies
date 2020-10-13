@@ -12,3 +12,5 @@ require (
 	github.com/vishvananda/netlink v1.1.0
 	go.uber.org/zap v1.16.0
 )
+
+replace github.com/coreos/etcd => github.com/coreos/etcd v3.3.24+incompatible
