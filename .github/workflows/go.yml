@@ -33,3 +33,8 @@ jobs:
       run: go list -json -m all > go.list
     - name: Check dependencies for vulnerabilities using Nancy
       uses: sonatype-nexus-community/nancy-github-action@main
+    - name: SonarCloud Scan
+      uses: sonarsource/sonarcloud-github-action@master
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
