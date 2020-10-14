@@ -16,6 +16,8 @@ debug
 .gitattributes
 .gitlab-ci.yml
 .env
+.goreleaser.yml
+dist/
 Dockerfile
 LICENSE
 README.md

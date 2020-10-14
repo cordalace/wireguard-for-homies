@@ -1,4 +1,4 @@
-name: build-test-lint
+name: build
 
 on:
   push:
@@ -8,7 +8,6 @@ on:
 
 jobs:
   build:
-    name: Build
     runs-on: ubuntu-latest
     steps:
     - name: Set up Go 1.x
