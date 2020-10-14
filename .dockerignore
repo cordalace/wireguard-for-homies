@@ -11,6 +11,7 @@
 debug
 .dockerignore
 .git/
+.github/
 .gitignore
 .gitattributes
 .gitlab-ci.yml
