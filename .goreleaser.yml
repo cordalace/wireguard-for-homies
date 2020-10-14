@@ -50,7 +50,7 @@ dockers:
       - "--label=org.label-schema.build-date={{.Date}}"
       - "--label=org.label-schema.name={{.ProjectName}}"
       - "--label=org.label-schema.description=Telegram bot managed wireguard server for you and your homies"
-      - "--label=org.opencontainers.image.usage=https://github.com/cordalace/wireguard-for-homies/wiki/Usage"
+      - "--label=org.label-schema.usage=https://github.com/cordalace/wireguard-for-homies/wiki/Usage"
       - "--label=org.label-schema.url=https://github.com/cordalace/wireguard-for-homies"
       - "--label=org.label-schema.vcs-url=https://github.com/cordalace/wireguard-for-homies"
       - "--label=org.label-schema.vcs-ref={{.FullCommit}}"
