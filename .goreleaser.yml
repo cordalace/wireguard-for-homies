@@ -7,7 +7,7 @@ builds:
       - CGO_ENABLED=0
     goos:
       - linux
-    main: ./cmd/wireguard-for-homies/main.go
+    main: ./cmd/wireguard-for-homies
     goarch:
       - amd64
       - "386"
@@ -16,33 +16,30 @@ builds:
     goarm:
       - 6
       - 7
-    mod_timestamp: '{{ .CommitTimestamp }}'
+    mod_timestamp: "{{ .CommitTimestamp }}"
 archives:
-  - replacements:
-      darwin: Darwin
-      linux: Linux
-      windows: Windows
-      "386": i386
-      amd64: x86_64
+  - files:
+      - LICENSE
+      - README.md
 checksum:
-  name_template: '{{ .ProjectName }}-{{ .Version }}-checksums.txt'
+  name_template: "{{ .ProjectName }}-{{ .Version }}-checksums.txt"
 snapshot:
   name_template: "{{ .Tag }}-next"
 changelog:
   sort: asc
   filters:
     exclude:
-      - '^docs:'
-      - '^test:'
+      - "^docs:"
+      - "^test:"
 dockers:
   - goos: linux
     goarch: amd64
     dockerfile: Dockerfile
     image_templates:
-      - docker.io/cordalace/wireguard-for-homies:latest
-      - docker.io/cordalace/wireguard-for-homies:v{{ .Major }}
-      - docker.io/cordalace/wireguard-for-homies:v{{ .Major }}.{{ .Minor }}
-      - docker.io/cordalace/wireguard-for-homies:{{ .Tag }}
+      - "docker.io/cordalace/{{ .ProjectName }}:latest"
+      - "docker.io/cordalace/{{ .ProjectName }}:v{{ .Major }}"
+      - "docker.io/cordalace/{{ .ProjectName }}:v{{ .Major }}.{{ .Minor }}"
+      - "docker.io/cordalace/{{ .ProjectName }}:{{ .Tag }}"
     build_flag_templates:
       - "--pull"
       - "--label=maintainer=Azat Kurbanov <cordalace@gmail.com>"
