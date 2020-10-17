@@ -19,5 +19,6 @@ debug
 .goreleaser.yml
 dist/
 Dockerfile
+Dockerfile.release
 LICENSE
 README.md
