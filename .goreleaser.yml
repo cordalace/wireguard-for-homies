@@ -25,6 +25,8 @@ checksum:
   name_template: "{{ .ProjectName }}-{{ .Version }}-checksums.txt"
 snapshot:
   name_template: "{{ .Tag }}-next"
+signs:
+  - artifacts: checksum
 changelog:
   sort: asc
   filters:
@@ -34,7 +36,7 @@ changelog:
 dockers:
   - goos: linux
     goarch: amd64
-    dockerfile: Dockerfile
+    dockerfile: Dockerfile.release
     image_templates:
       - "docker.io/cordalace/{{ .ProjectName }}:latest"
       - "docker.io/cordalace/{{ .ProjectName }}:v{{ .Major }}"
